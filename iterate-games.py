@@ -8,12 +8,15 @@ def evaluate(board):
     engine.configure({"Hash": 2048})
     engine.configure({"Threads": 3})
 
-    with engine.analysis(board=board, limit=chess.engine.Limit(depth=40)    , multipv=3) as analysis:
+    analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=40), multipv=3) 
+    with analysis:
         # Expect result of type chess.engine.BestMove:
         result = analysis.wait()
         # TO DO: can I both stream live engine output *and* collect resulting best move?
         print("Best move: " + board.san(result.move))
         print("Ponder (expected next move from opponent): " + board.san(result.ponder))
+        print("Score: " + str(analysis.info["score"]))
+        print("WDL: " + str(analysis.info["score"].wdl()))
 
     engine.quit()
     
@@ -30,6 +33,10 @@ while True:
     game = chess.pgn.read_game(f)
     if game is None:
         break
+
+    # Skip games that have ended.
+    if game.headers['Result'] != '*':
+        continue
     
     print("Event: " + game.headers['Event'])
     print("White: " + game.headers['White'])
