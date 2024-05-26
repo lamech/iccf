@@ -21,8 +21,9 @@ def evaluate(board):
     print("Starting analysis...")
     
     multipv = 3
+    depth = 40
 
-    analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=40), multipv=multipv) 
+    analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=depth), multipv=multipv) 
     # TO DO: don't hard code this, initialize cache based on multipv value.
     cache = ["#1","#2","#3"]
 
@@ -68,40 +69,10 @@ def evaluate(board):
         print("WDL: " + format_wdl(analysis.info["score"]))
 
     engine.quit()
+    
 
 # ICCF seems to use latin-1 encoding.
 f = open(sys.argv[1], 'r', encoding='latin-1')
 
-me = 'Friedman, Dan'
-
-games = {}
-i = 0
-while True:
-    i += 1
-    game = chess.pgn.read_game(f)
-    if game is None:
-        break
-
-    # Skip games that have ended.
-    if game.headers['Result'] != '*':
-        continue
-    
-    print("Event: " + game.headers['Event'])
-    print("White: " + game.headers['White'])
-    print("Black: " + game.headers['Black'])
-    print("Last move: " + str(game.end()))
-    print("Position: " + game.end().board().fen())
-    print("\n")
-
-    if (game.headers['White'] == me) and game.end().turn():
-        print("White to play, my turn.\n\n")
-        result = evaluate(game.end().board())
-    elif (game.headers['Black'] == me) and not(game.end().turn()):
-        print("Black to play, my turn.\n\n")
-        result = evaluate(game.end().board())
-    else: 
-        print("Not my turn.")
-        print("------------------------------------\n\n\n")
-        continue
-
-    print("------------------------------------\n\n\n")
+game = chess.pgn.read_game(f)
+result = evaluate(game.end().board())
