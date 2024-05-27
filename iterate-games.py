@@ -32,7 +32,7 @@ def evaluate(board):
     analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=_engine_depth), multipv=_engine_multipv) 
 
     # multipv data is 1-indexed not 0-indexed, so our lines list is too:
-    lines = [str(i+1) + "." for i in range(_engine_multipv)]
+    lines = [str(i+1) + "." for i in range(int(_engine_multipv))]
 
     with analysis:
 
