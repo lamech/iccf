@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import chess
 import chess.pgn
@@ -14,7 +15,7 @@ def format_wdl(score):
     return "W: %d D: %d L: %d" % (wdl.wins, wdl.draws, wdl.losses)
 
 def evaluate(board):
-    engine = chess.engine.SimpleEngine.popen_uci(r"/opt/homebrew/bin/stockfish")
+    engine = chess.engine.SimpleEngine.popen_uci(r"stockfish")
     engine.configure({"Hash": 2048})
     engine.configure({"Threads": 3})
 
