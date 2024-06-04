@@ -5,12 +5,34 @@ import sys
 import chess
 import chess.pgn
 import chess.engine
+#import argparse
+# TODO: replace all this env var parsing with argparse
+#_arg_parser = argparse.ArgumentParser()
+#_arg_parser.add_argument()
+#args = _arg_parser.parse()
 
 _engine_path = os.environ.get('ICCF_ENGINE_PATH', r"stockfish")
 _engine_multipv = os.environ.get('ICCF_MULTIPV', 5)
 _engine_threads = os.environ.get('ICCF_THREADS', 5)
-_engine_depth = os.environ.get('ICCF_DEPTH', 25)
+_engine_depth = os.environ.get('ICCF_DEPTH', 20)
 _engine_hash = os.environ.get('ICCF_HASH', 256)
+
+# Default to True, require the string 'True':
+_only_my_turn = (os.getenv('ICCF_ONLY_MY_TURN', 'True') == 'True')
+if (_only_my_turn):
+    print("\n")
+    print("Only analyzing games where it's my turn.")
+    print("------------------------------------\n\n\n")
+
+def is_my_turn(game):
+    if ((game.headers['White'] == me) and (game.end().turn() == chess.WHITE)): 
+        print("White to play, my turn.")
+        return True
+    elif ((game.headers['Black'] == me) and (game.end().turn() == chess.BLACK)):
+        print("White to play, my turn.")
+        return True
+    else:
+        return False
 
 def format_score(score):
     return "%+.2f" % (round(score.white().score()/100, 2))
@@ -94,22 +116,26 @@ while True:
     if game.headers['Result'] != '*':
         continue
     
-    print("Event: " + game.headers['Event'])
-    print("White: " + game.headers['White'])
-    print("Black: " + game.headers['Black'])
+    if 'Event' in game.headers: 
+        print("Event: " + game.headers['Event'])
+    if 'White' in game.headers: 
+        print("White: " + game.headers['White'])
+    if 'Black' in game.headers: 
+        print("Black: " + game.headers['Black'])
+
     print("Last move: " + str(game.end()))
     print("Position: " + game.end().board().fen())
     print("\n")
 
-    if (game.headers['White'] == me) and game.end().turn():
-        print("White to play, my turn.\n\n")
+    # TODO: move is_my_turn and all the analysis code out to a module.
+
+    if _only_my_turn:
+        if (is_my_turn(game)):
+            result = evaluate(game.end().board())
+        else: 
+            print("Not my turn.")
+    else:
         result = evaluate(game.end().board())
-    elif (game.headers['Black'] == me) and not(game.end().turn()):
-        print("Black to play, my turn.\n\n")
-        result = evaluate(game.end().board())
-    else: 
-        print("Not my turn.")
-        print("------------------------------------\n\n\n")
-        continue
 
     print("------------------------------------\n\n\n")
+
