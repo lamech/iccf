@@ -5,31 +5,32 @@ import sys
 import chess
 import chess.pgn
 import chess.engine
-#import argparse
-# TODO: replace all this env var parsing with argparse
-#_arg_parser = argparse.ArgumentParser()
-#_arg_parser.add_argument()
-#args = _arg_parser.parse()
+import argparse
+import pathlib
 
-_engine_path = os.environ.get('ICCF_ENGINE_PATH', r"stockfish")
-_engine_multipv = os.environ.get('ICCF_MULTIPV', 5)
-_engine_threads = os.environ.get('ICCF_THREADS', 5)
-_engine_depth = os.environ.get('ICCF_DEPTH', 20)
-_engine_hash = os.environ.get('ICCF_HASH', 256)
+_arg_parser = argparse.ArgumentParser(description='Script to analyze multiple games in a PGN file.', fromfile_prefix_chars='@', )
+_arg_parser.add_argument('--path', default="stockfish", type=pathlib.Path, help='Engine path. (default: %(default)s)')
+_arg_parser.add_argument('--multipv', default=5, type=int, help='How many prinicpal variations the engine should look at concurrently. (default: %(default)s)')
+_arg_parser.add_argument('--threads', default=5, type=int, help='How many threads the engine should use. (default: %(default)s)')
+_arg_parser.add_argument('--depth', default=20, type=int, help='How deep the engine should look. (default: %(default)s)')
+_arg_parser.add_argument('--hash', default=256, type=int, help='How big a hash the engine should use. (default: %(default)s)')
+_arg_parser.add_argument('--player', help="Optional. If supplied: only look at games in which it is this player's turn.")
+_arg_parser.add_argument('file', type=pathlib.Path)
 
-# Default to True, require the string 'True':
-_only_my_turn = (os.getenv('ICCF_ONLY_MY_TURN', 'True') == 'True')
-if (_only_my_turn):
+args = _arg_parser.parse_args()
+print(args)
+
+if (args.player != None):
     print("\n")
-    print("Only analyzing games where it's my turn.")
+    print(f"Only analyzing games where it's {args.player}'s turn.")
     print("------------------------------------\n\n\n")
 
-def is_my_turn(game):
-    if ((game.headers['White'] == me) and (game.end().turn() == chess.WHITE)): 
-        print("White to play, my turn.")
+def is_player_turn(game,player):
+    if ((game.headers['White'] == player) and (game.end().turn() == chess.WHITE)): 
+        print(f"White to play, {player}'s turn.")
         return True
-    elif ((game.headers['Black'] == me) and (game.end().turn() == chess.BLACK)):
-        print("White to play, my turn.")
+    elif ((game.headers['Black'] == player) and (game.end().turn() == chess.BLACK)):
+        print(f"White to play, {player}'s turn.")
         return True
     else:
         return False
@@ -44,17 +45,17 @@ def format_wdl(score):
     wdl = score.wdl().white()
     return "W: %d D: %d L: %d" % (wdl.wins, wdl.draws, wdl.losses)
 
-def evaluate(board):
-    engine = chess.engine.SimpleEngine.popen_uci(_engine_path)
-    engine.configure({"Hash": _engine_hash})
-    engine.configure({"Threads": _engine_threads})
+def evaluate(board, path, enginehash, threads, multipv, depth):
+    engine = chess.engine.SimpleEngine.popen_uci(path)
+    engine.configure({"Hash": enginehash})
+    engine.configure({"Threads": threads})
 
     print("Starting analysis...")
     
-    analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=_engine_depth), multipv=_engine_multipv) 
+    analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=depth), multipv=multipv) 
 
     # multipv data is 1-indexed not 0-indexed, so our lines list is too:
-    lines = [str(i+1) + "." for i in range(int(_engine_multipv))]
+    lines = [str(i+1) + "." for i in range(int(multipv))]
 
     with analysis:
 
@@ -100,9 +101,7 @@ def evaluate(board):
     engine.quit()
 
 # ICCF seems to use latin-1 encoding.
-f = open(sys.argv[1], 'r', encoding='latin-1')
-
-me = 'Friedman, Dan'
+f = open(args.file, 'r', encoding='latin-1')
 
 games = {}
 i = 0
@@ -127,15 +126,13 @@ while True:
     print("Position: " + game.end().board().fen())
     print("\n")
 
-    # TODO: move is_my_turn and all the analysis code out to a module.
-
-    if _only_my_turn:
-        if (is_my_turn(game)):
-            result = evaluate(game.end().board())
+    if (args.player != None):
+        if (is_player_turn(game,args.player)):
+            result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
         else: 
-            print("Not my turn.")
+            print(f"Not {args.player}'s turn.")
     else:
-        result = evaluate(game.end().board())
+        result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
 
     print("------------------------------------\n\n\n")
 

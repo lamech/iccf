@@ -2,3 +2,4 @@ venv
 *.pgn
 .*.swp
 nope
+args.txt
