@@ -30,7 +30,7 @@ def is_player_turn(game,player):
         print(f"White to play, {player}'s turn.")
         return True
     elif ((game.headers['Black'] == player) and (game.end().turn() == chess.BLACK)):
-        print(f"White to play, {player}'s turn.")
+        print(f"Black to play, {player}'s turn.")
         return True
     else:
         return False
