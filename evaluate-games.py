@@ -36,10 +36,19 @@ def is_player_turn(game,player):
         return False
 
 def format_score(score):
-    return "%+.2f" % (round(score.white().score()/100, 2))
+    s = score.white().score()
+    if s is None:
+        if score.is_mate():
+            return "M%s" % score.relative.mate() 
+        else: return score
+    else:
+        return "%+.2f" % (round(score.white().score()/100, 2))
 
 def format_percentage(score):
-    return "%.2f%%" % (round(score.wdl().white().expectation() * 100, 2))
+    if score.is_mate():
+        return "100%"
+    else:
+        return "%.2f%%" % (round(score.wdl().white().expectation() * 100, 2))
 
 def format_wdl(score):
     wdl = score.wdl().white()
