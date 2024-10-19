@@ -4,3 +4,5 @@ venv
 nope
 args.txt
 only.txt
+pgn
+.DS_Store
