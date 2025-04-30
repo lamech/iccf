@@ -7,6 +7,21 @@ import chess.pgn
 import chess.engine
 import argparse
 import pathlib
+from datetime import datetime
+
+now = datetime.now()
+dt = now.strftime("%m%d%Y_%H-%M-%S")
+logfile = f"output-{dt}.log"
+
+# TODO: Use python logging someday.
+# TODO: Don't hard code the log file name.
+def printLog(*args, **kwargs):
+    print(*args, **kwargs)
+    log(*args, **kwargs)
+
+def log(*args, **kwargs):
+    with open(logfile,'a') as file:
+        print(*args, **kwargs, file=file)
 
 _arg_parser = argparse.ArgumentParser(description='Script to analyze multiple games in a PGN file.', fromfile_prefix_chars='@', )
 _arg_parser.add_argument('--path', default="stockfish", type=pathlib.Path, help='Engine path. (default: %(default)s)')
@@ -18,19 +33,19 @@ _arg_parser.add_argument('--player', help="Optional. If supplied: only look at g
 _arg_parser.add_argument('file', type=pathlib.Path)
 
 args = _arg_parser.parse_args()
-print(args)
+printLog(args)
 
 if (args.player != None):
-    print("\n")
-    print(f"Only analyzing games where it's {args.player}'s turn.")
-    print("------------------------------------\n\n\n")
+    printLog("\n")
+    printLog(f"Only analyzing games where it's {args.player}'s turn.")
+    printLog("------------------------------------\n\n\n")
 
 def is_player_turn(game,player):
     if ((game.headers['White'] == player) and (game.end().turn() == chess.WHITE)): 
-        print(f"White to play, {player}'s turn.")
+        printLog(f"White to play, {player}'s turn.")
         return True
     elif ((game.headers['Black'] == player) and (game.end().turn() == chess.BLACK)):
-        print(f"Black to play, {player}'s turn.")
+        printLog(f"Black to play, {player}'s turn.")
         return True
     else:
         return False
@@ -59,7 +74,7 @@ def evaluate(board, path, enginehash, threads, multipv, depth):
     engine.configure({"Hash": enginehash})
     engine.configure({"Threads": threads})
 
-    print("Starting analysis...")
+    printLog("Starting analysis...")
     
     analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=depth), multipv=multipv) 
 
@@ -99,13 +114,17 @@ def evaluate(board, path, enginehash, threads, multipv, depth):
         # Add extra newlines to make up for the output shenanigans above:
         print("\n\n\n")
 
+        # Now that analysis is done, print lines to log file.
+        for line in lines:
+            log(line)
+
         # Grab result of analysis (expecting type chess.engine.BestMove):
         result = analysis.wait()
 
-        print("Best move: " + board.san(result.move))
-        print("Eval: " + format_score(analysis.info["score"]))
-        print("Percentage: " + format_percentage(analysis.info["score"]))
-        print("WDL: " + format_wdl(analysis.info["score"]))
+        printLog("Best move: " + board.san(result.move))
+        printLog("Eval: " + format_score(analysis.info["score"]))
+        printLog("Percentage: " + format_percentage(analysis.info["score"]))
+        printLog("WDL: " + format_wdl(analysis.info["score"]))
 
     engine.quit()
 
@@ -125,24 +144,24 @@ while True:
         continue
     
     if 'Event' in game.headers: 
-        print("Event: " + game.headers['Event'])
+        printLog("Event: " + game.headers['Event'])
     if 'White' in game.headers: 
-        print("White: " + game.headers['White'])
+        printLog("White: " + game.headers['White'])
     if 'Black' in game.headers: 
-        print("Black: " + game.headers['Black'])
+        printLog("Black: " + game.headers['Black'])
 
-    print("Last move: " + str(game.end()))
-    print("Position: " + game.end().board().fen())
-    print("\n")
+    printLog("Last move: " + str(game.end()))
+    printLog("Position: " + game.end().board().fen())
+    printLog("\n")
 
     if (args.player != None):
         if (is_player_turn(game,args.player)):
             result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
         else: 
-            print(f"Not {args.player}'s turn.")
+            printLog(f"Not {args.player}'s turn.")
     else:
         result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
 
-    print("------------------------------------\n\n\n")
+    printLog("------------------------------------\n\n\n")
 
-print("Finished.\n")
+printLog("Finished.\n")
