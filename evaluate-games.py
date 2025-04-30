@@ -7,11 +7,8 @@ import chess.pgn
 import chess.engine
 import argparse
 import pathlib
-from datetime import datetime
 
-now = datetime.now()
-dt = now.strftime("%m%d%Y_%H-%M-%S")
-logfile = f"output-{dt}.log"
+logfile = "evaluate-games.log"
 
 # TODO: Use python logging someday.
 # TODO: Don't hard code the log file name.
