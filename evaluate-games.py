@@ -20,6 +20,18 @@ def log(*args, **kwargs):
     with open(logfile,'a') as file:
         print(*args, **kwargs, file=file)
 
+def logGameInfo(game):
+    if 'Event' in game.headers: 
+        printLog("Event: " + game.headers['Event'])
+    if 'White' in game.headers: 
+        printLog("White: " + game.headers['White'])
+    if 'Black' in game.headers: 
+        printLog("Black: " + game.headers['Black'])
+    printLog("Last move: " + str(game.end()))
+    printLog("Position: " + game.end().board().fen())
+    printLog("\n")
+
+
 _arg_parser = argparse.ArgumentParser(description='Script to analyze multiple games in a PGN file.', fromfile_prefix_chars='@', )
 _arg_parser.add_argument('--path', default="stockfish", type=pathlib.Path, help='Engine path. (default: %(default)s)')
 _arg_parser.add_argument('--multipv', default=5, type=int, help='How many prinicpal variations the engine should look at concurrently. (default: %(default)s)')
@@ -140,23 +152,18 @@ while True:
     if game.headers['Result'] != '*':
         continue
     
-    if 'Event' in game.headers: 
-        printLog("Event: " + game.headers['Event'])
-    if 'White' in game.headers: 
-        printLog("White: " + game.headers['White'])
-    if 'Black' in game.headers: 
-        printLog("Black: " + game.headers['Black'])
-
-    printLog("Last move: " + str(game.end()))
-    printLog("Position: " + game.end().board().fen())
-    printLog("\n")
-
     if (args.player != None):
         if (is_player_turn(game,args.player)):
+            printLog(f"Evaluating game:")
+            logGameInfo(game)
             result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
         else: 
+            printLog(f"Skipping game:")
+            logGameInfo(game)
             printLog(f"Not {args.player}'s turn.")
     else:
+        logGameInfo(game)
+        printLog(f"Evaluating game:")
         result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
 
     printLog("------------------------------------\n\n\n")

@@ -10,6 +10,12 @@ pgn: $(ICCF)/events.pgn
 o:
 	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only.txt events.pgn
 
+o45:
+	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only-45.txt events.pgn
+
+o50:
+	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only-50.txt events.pgn
+
 a:
 	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @args.txt events.pgn
 
