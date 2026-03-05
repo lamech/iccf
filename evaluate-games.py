@@ -38,6 +38,7 @@ _arg_parser.add_argument('--multipv', default=5, type=int, help='How many prinic
 _arg_parser.add_argument('--threads', default=5, type=int, help='How many threads the engine should use. (default: %(default)s)')
 _arg_parser.add_argument('--depth', default=20, type=int, help='How deep the engine should look. (default: %(default)s)')
 _arg_parser.add_argument('--hash', default=256, type=int, help='How big a hash the engine should use. (default: %(default)s)')
+_arg_parser.add_argument('--fullpv', help='Optional. If present: print full Principal Variation after analysis.', action=argparse.BooleanOptionalAction)
 _arg_parser.add_argument('--player', help="Optional. If supplied: only look at games in which it is this player's turn.")
 _arg_parser.add_argument('file', type=pathlib.Path)
 
@@ -86,21 +87,21 @@ def format_wdl(score):
 
 def log_result(result):
     print_log("Best move: " + result['best_move'])
-    print_log("Full PV: " + result['full_pv'])
+
+    if (args.fullpv):
+        print_log("Full PV: " + result['full_pv'])
+
     print_log("Eval: " + result['eval'])
     print_log("Percentage: " + result['percentage'])
     print_log("WDL: " + result['wdl']);
     print_log("------------------------------------\n\n\n")
-
-# TODO:
-#def log_result_summary(results):
 
 def evaluate(board, path, enginehash, threads, multipv, depth):
     engine = chess.engine.SimpleEngine.popen_uci(path)
     engine.configure({"Hash": enginehash})
     engine.configure({"Threads": threads})
 
-    print_log("Starting analysis...")
+    print("Starting analysis...")
 
     analysis = engine.analysis(board=board, limit=chess.engine.Limit(depth=depth), multipv=multipv) 
 
@@ -146,9 +147,9 @@ def evaluate(board, path, enginehash, threads, multipv, depth):
           # Add extra newlines to make up for the output shenanigans above:
           print("\n\n\n")
   
-          # Now that analysis is done, print full lines to log file.
-          for line in full_lines:
-              log(line)
+          # Now that analysis is done, print full lines.
+          #for line in full_lines:
+          #    print(line)
   
           # Grab result of analysis (expecting type chess.engine.BestMove):
           bm = analysis.wait()
@@ -192,7 +193,5 @@ while True:
         result = evaluate(game.end().board(), args.path, args.hash, args.threads, args.multipv, args.depth)
         log_result(result)
         results.append(result)
-#TODO:
-# log_result_summary(results)
 
 print_log("Finished.\n")
