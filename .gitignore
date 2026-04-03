@@ -2,10 +2,11 @@ venv
 *.pgn
 .*.swp
 nope
-args.txt
-only.txt
+args*.txt
+only*.txt
 pgn
 .DS_Store
 logrotate.conf
 logrotate.status
 evaluate-games.log*
+old-logs
