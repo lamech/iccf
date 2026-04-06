@@ -11,11 +11,14 @@ import chess.pgn
 import chess.engine
 import argparse
 import pathlib
+import json
 
 logfile = "evaluate-games.log"
+resultsfile = "results.json"
 
 # TODO: Use python logging someday.
-# TODO: Don't hard code the log file name.
+# TODO: Don't hard code the log and results file names.
+
 def print_log(*args, **kwargs):
     print(*args, **kwargs)
     log(*args, **kwargs)
@@ -34,22 +37,6 @@ def log_game_info(game):
     print_log("Last move: " + str(game.end()))
     print_log("Position: " + game.end().board().fen())
     print_log("\n")
-
-# Given a result dictionary, create a summary.
-def result_summary(result):
-    summary = ""
-
-    if "opponent" in result:
-        trunc_event = result['event'][:12] + "..." if len(result['event']) > 15 else f"{result['event']}"
-        trunc_opponent = result['opponent'][:12] + "..." if len(result['opponent']) > 15 else f"{result['opponent']}"
-        summary += f"{trunc_event} | {trunc_opponent} | "
-    summary += f"Last: {result['last_move']}\n"
-
-    if "color" in result:
-        summary += f"{result['color']} | "
-    summary += f"Best: {result['best_move']} | Eval: {result['eval']}\n" 
-
-    return summary
 
 # Format a move (node) as a string, with no comments.
 def move_str(node):
@@ -269,9 +256,9 @@ while True:
         results.append(result)
 
 ("------------------------------------\n\n")
-print_log("Summary:\n\n")
+print_log("Writing summary...\n\n")
 
-for result in results:
-    print_log(result_summary(result))
+with open(resultsfile,'w') as file:
+    json.dump(results, file)
 
 print_log("Finished.\n")

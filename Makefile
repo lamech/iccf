@@ -7,23 +7,26 @@ $(ICCF)/events.pgn:
 
 pgn: $(ICCF)/events.pgn
 
+evaluate_games:
+	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @$(CONFIG_FILE) events.pgn
+
 o:
-	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only.txt events.pgn
+	make -s evaluate_games summary CONFIG_FILE=only-40.txt
 
-o20:
-	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only-20.txt events.pgn
-
-o45:
-	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only-45.txt events.pgn
-
-o50:
-	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @only-50.txt events.pgn
+o.%:
+	make -s evaluate_games summary CONFIG_FILE=only-$(*).txt
 
 a:
-	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @args.txt events.pgn
+	make -s evaluate_games summary CONFIG_FILE=args.txt
 
 $(ICCF)/logrotate.conf:
 	cd $(ICCF) && envsubst < logrotate.conf.tmpl > logrotate.conf
 
 rotate: $(ICCF)/logrotate.conf
 	cd $(ICCF) && logrotate -s ./logrotate.status ./logrotate.conf
+
+summary:
+	@cd $(ICCF) && jq -r '["Event","Opponent","Last","Colour","Eval","Best"], (.[] | [.event,.opponent,.last_move,.color,.eval,.best_move]) | @csv'  results.json | csvlook --max-column-width 16
+
+summary.%:
+	@cd $(ICCF) && jq -r '["Event","Opponent","Last","Colour","Eval","Best"], (.[] | [.event,.opponent,.last_move,.color,.eval,.best_move]) | @csv'  results.json.$(*) | csvlook --max-column-width 16

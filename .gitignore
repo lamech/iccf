@@ -10,3 +10,4 @@ logrotate.conf
 logrotate.status
 evaluate-games.log*
 old-logs
+result*.json
