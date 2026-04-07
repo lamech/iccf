@@ -1,14 +1,15 @@
 ICCF ?= .
+PGN ?= $(ICCF)/events.pgn
 clean:
-	rm -f ~/*.pgn $(ICCF)/*.pgn
+	rm -f ~/*.pgn $(PGN)
 
-$(ICCF)/events.pgn:
+$(PGN):
 	cd $(ICCF) && awk 'FNR==1 && NR!=1 {print ""}{print}' ~/*.pgn > events.pgn
 
-pgn: $(ICCF)/events.pgn
+pgn: $(PGN)
 
 evaluate_games:
-	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @$(CONFIG_FILE) events.pgn
+	cd $(ICCF) && make -s rotate && time ./evaluate-games.py @$(CONFIG_FILE) $(PGN)
 
 o:
 	make -s evaluate_games summary CONFIG_FILE=only-40.txt
@@ -18,6 +19,9 @@ o.%:
 
 a:
 	make -s evaluate_games summary CONFIG_FILE=args.txt
+
+a.%:
+	make -s evaluate_games summary CONFIG_FILE=args-$(*).txt
 
 $(ICCF)/logrotate.conf:
 	cd $(ICCF) && envsubst < logrotate.conf.tmpl > logrotate.conf
