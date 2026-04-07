@@ -29,6 +29,7 @@ $(ICCF)/logrotate.conf:
 rotate: $(ICCF)/logrotate.conf
 	cd $(ICCF) && logrotate -s ./logrotate.status ./logrotate.conf
 
+# Summary requires cvskit, installable via apt.
 summary:
 	@cd $(ICCF) && jq -r '["Event","Opponent","Last","Colour","Eval","Best"], (.[] | [.event,.opponent,.last_move,.color,.eval,.best_move]) | @csv'  results.json | csvlook --max-column-width 16
 
