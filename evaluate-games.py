@@ -230,6 +230,7 @@ while True:
         continue
     
     color_turn = color_str(game.end().turn())
+    opponent = None
 
     if (args.player is not None):
         player_color = color_str(get_color(game, args.player))
